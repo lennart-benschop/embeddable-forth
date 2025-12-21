@@ -478,7 +478,45 @@ run_engine(struct engine_state* state )
       }
       break;			
     case OP_UDSLASHMOD: /* UD/MOD */       
+      {
+	uint64_t dt1 = ((uint64_t)tos << 32) | sp[0];
+	uint64_t dt2 = ((uint64_t)sp[1]<<32) | sp[2];
+	uint64_t dt3;
+	if (dt1 == 0) {
+	  dt3 = -1LL;
+	  dt2 = -1LL;
+	} else {
+	  dt3 = dt2 / dt1;
+	  dt2 = dt2 % dt1;
+	}
+	sp[2] = dt2;
+	sp[1] = dt2>>32;
+	tos = dt3>>32;
+	sp[0] = dt3;
+      }
+      break;			
     case OP_DSLAHSMOD:  /* D/MOD */     
+      {
+	int64_t dt1 = ((int64_t)tos << 32) | sp[0];
+	int64_t dt2 = ((int64_t)sp[1]<<32) | sp[2];
+	int64_t dt3;
+	if (dt1 == 0 || (dt1 == -1LL && dt2==0x8000000000000000LL)) {
+	  dt3 = -1LL;
+	  dt2 = -1LL;
+	} else {
+	  dt3 = dt2 / dt1;
+	  dt2 = dt2 % dt1;
+	  if (((dt2 ^ dt1) & 0x8000000000000000LL) && dt2 != 0) {
+	    dt3 ==1;
+	    dt2 += dt1;
+	  }
+	}
+	sp[2] = dt2;
+	sp[1] = dt2>>32;
+	tos = dt3>>32;
+	sp[0] = dt3;
+      }
+      break;			
     case OP_LSHIFT:
       t1 = *sp++;
       tos = t1 << tos;
