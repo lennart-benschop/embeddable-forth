@@ -915,18 +915,22 @@ VARIABLE TERMMODE
   BEGIN
    KEY DUP 8 = OVER 127 = OR 
    IF \ Backspace/delete
-     DROP DUP IF 1-  TERMMODE @ IF 8 EMIT THEN THEN 
+     DROP DUP IF 1-  TERMMODE @ IF 8 EMIT BL EMIT 8 EMIT  THEN THEN 
    ELSE
      DUP 10 = OVER 13 = OR 
      IF \ CR/LF
       DROP SWAP DROP R> DROP SPACE EXIT      
      ELSE
-      TERMMODE @ IF DUP EMIT THEN 
-      OVER R@ - IF   
-       >R OVER OVER + R> SWAP C! 1+
+       DUP 31 > IF 	 
+        TERMMODE @ IF DUP EMIT THEN 
+        OVER R@ - IF   
+         >R OVER OVER + R> SWAP C! 1+
+        ELSE
+          DROP
+	THEN
       ELSE
-       DROP
-      THEN
+        DROP
+      THEN	  
      THEN 
    THEN 
   0 UNTIL     
