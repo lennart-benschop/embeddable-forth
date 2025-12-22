@@ -1254,7 +1254,7 @@ THEN
 
 : ALLOT ( n --- )
 \G Allot n extra bytes of memory, starting at HERE to the dictionary.
-  DP +! ;
+  DP +! SP@ HERE - 128 < -5 ?THROW ;
 
 : , ( x --- )
 \G Append cell x to the dictionary at HERE.
@@ -1625,7 +1625,7 @@ M: >BODY ( xt --- a-addr)
 
 : ?STACK ( ---)
 \G Check for stack over/underflow and abort with an error if needed.
-  DEPTH DUP 0< -4 ?THROW 10000 > -3 ?THROW FP@ F0 @ U> -4 ?THROW ;
+  DEPTH DUP 0< -4 ?THROW 10000 > -3 ?THROW FP@ F0 @ U> -54 ?THROW ;
 
 VARIABLE FNUMBER-VECTOR
 : INTERPRET ( ---)

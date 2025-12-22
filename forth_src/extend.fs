@@ -54,6 +54,13 @@ M: BOUNDS ( addr1 n --- addr2 addr1)
 
 \ PART 2: SEARCH ORDER WORDLIST
 
+VARIABLE VOC-LINK ( --- a-addr)
+\G Variable that links all vocabularies together, so we can link.
+FORTH-WORDLIST VOC-LINK !
+
+VARIABLE FENCE ( --- a-addr)
+\G Address below which we are not allowed to forget.
+
 : GET-ORDER ( --- w1 w2 ... wn n )
 \G Return all wordlists in the search order, followed by the count.
   #ORDER @ 0 ?DO CONTEXT I CELLS + @ LOOP #ORDER @ ;
@@ -75,7 +82,8 @@ VARIABLE #THREADS ( --- a-addr)
 
 : WORDLIST ( --- wid)
 \G Make a new wordlist and give its address.
-  HERE 0 , #THREADS @ , HERE #THREADS @ CELLS DUP ALLOT ERASE ;
+    HERE DUP VOC-LINK @ , VOC-LINK !
+    #THREADS @ , HERE #THREADS @ CELLS DUP ALLOT ERASE ;
 
 : DEFINITIONS  ( --- )
 \G Set the definitions wordlist to the last wordlist in the search order.
@@ -103,6 +111,46 @@ CONSTANT ROOT-WORDLIST ( --- wid )
   DOES> >R                      \ Replace last item in the search order.
   GET-ORDER SWAP DROP R> @ SWAP SET-ORDER ;
 
+: (FORGET) ( xt ---)
+\G Forget the word indicated by xt and everything defined after it.    
+    >NAME CELL- DUP FENCE @ U< -6 ?THROW \ Check we are not below fence.
+    >R \ Store new dictionary pointer to return stack.
+    VOC-LINK @   
+    BEGIN  \ Traverse all worlists
+	DUP R@ U> IF
+	    DUP @ VOC-LINK ! \ Wordlist entirely above new DP, remove it.
+	ELSE
+	    R@
+	    OVER CELL+ @ 0 DO
+	   	OVER I 2 + CELLS + CELL+
+		BEGIN
+	   	   CELL- @ DUP 2 PICK U<
+		UNTIL
+		2 PICK I 2 + CELLS + !
+	    LOOP
+	    DROP
+	THEN
+	@
+	DUP 0=
+    UNTIL DROP
+    R> DP ! \ Adjust dictionary pointer.
+;
+
+: FORGET ( "ccc" ---)
+\G Remove word "ccc" from the dictionary, and anything defined later.
+    32 WORD UPPERCASE? FIND 0=
+    IF
+	DROP \ Exit silently if word not found.
+    ELSE
+	(FORGET)
+    THEN
+;
+
+: MARKER ( "ccc" --)
+\G Create a word that when executeed forgets itself and everything defined
+\G after it.
+   CREATE DOES> 4 - (FORGET)    
+;
 
 : ENVIRONMENT? ( c-addr u --- false | val true)
 \G Return an environmental query of the string c-addr u    
@@ -210,9 +258,8 @@ CONSTANT ROOT-WORDLIST ( --- wid )
 
 : CD ( "ccc"  --)
 \G Change to the specified directory
-  BL WORD COUNT CHDIR -38 ?THROW ;
+  BL WORD COUNT CHDIR -40 ?THROW ;
   
-
 : DELETE ( "ccc"  --)
 \G Delete the specified file.    
   BL WORD COUNT DELETE-FILE -38 ?THROW ;
@@ -236,18 +283,29 @@ DEFINITIONS
 
 -3 MESS" Stack overflow"
 -4 MESS" Stack underflow"
+-5 MESS" Dictionary full"
+-6 MESS" Below fence"
 -10 MESS" Divide overflow"
 -13 MESS" Undefined word"
 -22 MESS" Incomplete control structure"
 -28 MESS" BREAK key pressed"
 -37 MESS" File I/O error"
 -38 MESS" File does not exist"
+-39 MESS" Bad system command"
+-40 MESS" Directory does not exist"
+-41 MESS" Unimplemented system call"
+-54 MESS" Floating point stack underflow"
 
 : 2CONSTANT  ( d --- )
 \G Create a new definition that has the following runtime behavior.
 \G Runtime: ( --- d) push the constant double number on the stack. 
   CREATE HERE 2! 8 ALLOT DOES> 2@ ;
 
+: 2VARIABLE ( --- )
+\G Create a new definition that has the following runtime behavior.
+\G Runtime: ( --- a-addr) push address onto the stack. 
+    CREATE 0 , 0 , ;
+    
 : D.R ( d n --- )
 \G Print double number d right-justified in a field of width n. 
   >R SWAP OVER DABS <# #S ROT SIGN #> R> OVER - 0 MAX SPACES TYPE ;
@@ -340,6 +398,8 @@ VARIABLE TIMER
 CAPS ON
 
 S" forth_src/float.fs" INCLUDED
+
+HERE FENCE !
 
 SAVE-SYSTEM forth.img
 BYE

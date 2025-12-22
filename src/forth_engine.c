@@ -92,9 +92,15 @@ load_engine_from_file(struct engine_state* state, char *fname)
 int
 run_engine(struct engine_state* state )
 {
+#ifdef FORTH_ALLOW_UNALIGNED
+#define GET_LIT16() (ip+=2,*(uint16_t*)(ip-2))
+#define GET_LIT24() (ip+=3,*(uint32_t*)(ip-3)&0xffffff)
+#define GET_LIT32() (ip+=4,*(uint32_t*)(ip-4))
+#else  
 #define GET_LIT16() (ip+=2,ip[-2] | (ip[-1]<<8))
 #define GET_LIT24() (ip+=3,ip[-3] | (ip[-2]<<8) | (ip[-1]<<16))
 #define GET_LIT32() (ip+=4,ip[-4] | (ip[-3]<<8) | (ip[-2]<<16) |(ip[-1]<<24))
+#endif  
   uint8_t *dict_base = state->dict;
   uint8_t *ip = state->ip;
   uint32_t *sp = state->sp;
@@ -1043,7 +1049,7 @@ run_engine(struct engine_state* state )
       fp++;
       tos = *sp++;
       break;
-    case OP_FFETCHU: /* F@: unaligned */
+    case OP_FFETCHU: /* F@U: unaligned */
       {
 	uint64_t dt =0;
 	for (t1=0; t1<8; t1++) {
@@ -1055,7 +1061,7 @@ run_engine(struct engine_state* state )
       }
       tos = *sp++;
       break;
-    case OP_FSTOREU: /* F!: unaligned */
+    case OP_FSTOREU: /* F!U: unaligned */
       {
 	uint64_t dt = *(uint64_t*)fp;
 	for (t1=0; t1<8; t1++) {
