@@ -107,9 +107,9 @@ CONSTANT ROOT-WORDLIST ( --- wid )
 : VOCABULARY ( --- )
 \G Make a definition that will replace the last word in the search order
 \G by its wordlist.
-  WORDLIST CREATE  ,            \ Make a new wordlist and store it in def.
+  CREATE WORDLIST DROP          \ Make a new wordlist and store it in def.
   DOES> >R                      \ Replace last item in the search order.
-  GET-ORDER SWAP DROP R> @ SWAP SET-ORDER ;
+  GET-ORDER SWAP DROP R> SWAP SET-ORDER ;
 
 : (FORGET) ( xt ---)
 \G Forget the word indicated by xt and everything defined after it.    
