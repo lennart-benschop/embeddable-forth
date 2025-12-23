@@ -264,6 +264,16 @@ CONSTANT ROOT-WORDLIST ( --- wid )
 \G Delete the specified file.    
   BL WORD COUNT DELETE-FILE -38 ?THROW ;
 
+CREATE CMDBUF 80 ALLOT
+: EDIT-FILE ( c-addr u ---)
+\G Edit a file with the name given by c-addr u
+    S" nano " CMDBUF PLACE
+    DUP >R CMDBUF COUNT + SWAP CMOVE R> CMDBUF C@ + CMDBUF C!
+    CMDBUF COUNT SYSTEM DROP ;
+
+: ED ( ---)
+\G Edit the file given by curfilename
+    CURFILENAME COUNT EDIT-FILE ;
 
 ROOT-WORDLIST CURRENT !
 : FORTH FORTH ;

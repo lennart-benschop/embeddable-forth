@@ -1201,7 +1201,7 @@ VARIABLE HANDLER ( --- a-addr )
 : (ABORT") ( f -- - )
 \G Runtime part of ABORT"
            IF R>  ERROR$ ! -2 THROW  
-           ELSE R> COUNT + ALIGNED >R THEN ;
+           ELSE R> COUNT + >R THEN ;
 
 : THROW ( n --- )
 \G If n is nonzero, cause the corresponding CATCH to return with n.
@@ -1572,13 +1572,13 @@ VARIABLE POCKET ( --- a-addr )
 : S"  ( "ccc<quote>" --- )
 \G Parse a string delimited by " and compile the following runtime semantics.
 \G Runtime: ( --- c-addr u) Return start address and length of that string. 
-  STATE @ IF POSTPONE (S") 34 WORD C@ 1+ ALLOT ALIGN 
+  STATE @ IF POSTPONE (S") 34 WORD C@ 1+ ALLOT
              ELSE 34 WORD COUNT POCKET PLACE POCKET COUNT THEN ; IMMEDIATE 
 
 : ABORT"  ( "ccc<quote>" --- )
 \G Parse a string delimited by " and compile the following runtime semantics.
 \G Runtime: ( f --- ) if f is nonzero, print the string and abort program.
-  POSTPONE (ABORT") 34 WORD C@ 1+ ALLOT ALIGN ; IMMEDIATE
+  POSTPONE (ABORT") 34 WORD C@ 1+ ALLOT  ; IMMEDIATE
 
 : ABORT ( --- )
 \G Abort unconditionally without a message.
