@@ -187,8 +187,37 @@ void forth_io(uint8_t opcode, struct engine_state *state)
   case 1:
     *--sp=kbhit();
     break;
+  case 2: /* ACCEPT */
+    {
+      char *p = dict_base + sp[1];
+      uint8_t c;
+      uint32_t i=0;
+      do {
+	c = getch();
+	if (c == '\b' || c==0x7f) {
+	  if (i>0) {
+	    putch('\b');putch(' ');putch('\b'); i--;p--;
+	  }
+	} else if (i < sp[0] && c>=' ' && c<='~') {
+	  *p++=c;putch(c);i++;
+	}	 
+      } while (c != '\r' && c != '\n');
+      putch(' ');
+      sp++;
+      sp[0] = i;
+    }
+    break;
   case 3: /* EMIT */
     putch(*sp++);
+    break;
+  case 4: /* TYPE */
+    { 
+      uint32_t i;
+      char *p=dict_base + sp[1];
+      for (i=0; i<sp[0]; i++)
+	putch(*p++);
+      sp+=2;
+    }
     break;
   case 5: /* BYE */
     putch('\n');

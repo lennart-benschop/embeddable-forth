@@ -500,9 +500,18 @@ $C001
 2OPCODE KEY? ( --- f)
 \G f is true if and only if a key is pressed and KEY will return immediately
 
+$C002
+2OPCODE ACCEPT ( c-addr n1 --- n2 )
+\G Read a line from the terminal to a buffer starting at c-addr with 
+\G length n1. n2 is the number of characters read,
+
 $C003
 2OPCODE EMIT ( c ---)
 \G Output the character c to the terminal.
+
+$C004
+2OPCODE TYPE ( c-addr1 u --- )
+\G Output the string starting at c-addr and length u to the terminal. 
 
 $C005
 2OPCODE BYE  ( ---)  
@@ -610,11 +619,6 @@ M: COUNT  ( c-addr1 --- c-addr2 c)
 \G This word is intended to be used with 'counted strings' where the
 \G first character indicates the length of the string.
    DUP 1 + SWAP C@ ;
-
-: TYPE ( c-addr1 u --- )
-\G Output the string starting at c-addr and length u to the terminal. 
-  DUP IF 0 DO DUP I + C@ EMIT LOOP DROP ELSE DROP DROP THEN ; 
-
 
 : (.") ( --- )
 \G Runtime part of ."
@@ -904,37 +908,6 @@ VARIABLE TERMMODE
 : NONRAW ( --- )
 \G Make the input nonraw.
    0 SETTERM 0 TERMMODE ! ;
-
-
-: ACCEPT ( c-addr n1 --- n2 )
-\G Read a line from the terminal to a buffer starting at c-addr with 
-\G length n1. n2 is the number of characters read,
-\ key is not echoed because it is 'cooked' mode. Backspace processing is
-\ already in place for easy adaptation to 'raw' input.
-  >R 0
-  BEGIN
-   KEY DUP 8 = OVER 127 = OR 
-   IF \ Backspace/delete
-     DROP DUP IF 1-  TERMMODE @ IF 8 EMIT BL EMIT 8 EMIT  THEN THEN 
-   ELSE
-     DUP 10 = OVER 13 = OR 
-     IF \ CR/LF
-      DROP SWAP DROP R> DROP SPACE EXIT      
-     ELSE
-       DUP 31 > IF 	 
-        TERMMODE @ IF DUP EMIT THEN 
-        OVER R@ - IF   
-         >R OVER OVER + R> SWAP C! 1+
-        ELSE
-          DROP
-	THEN
-      ELSE
-        DROP
-      THEN	  
-     THEN 
-   THEN 
-  0 UNTIL     
-;
 
 VARIABLE TIB ( --- addr) 
 \G is the standard terminal input buffer.
