@@ -1,5 +1,5 @@
 \ This is the file kernel.4th, included by the cross compiler.
-\ Copyright 2025 L.C. Benschop Vught, The Netherlands.
+\ Copyright 2025-2026 L.C. Benschop Vught, The Netherlands.
 \ The program is released under the MIT license
 \ There is NO WARRANTY.
 
@@ -1394,6 +1394,10 @@ VARIABLE LVARS ( --- a-addr)
 \G Variable containing the number of Local variable of the currently compiled
 \G definition.
 
+VARIABLE LVAR-CLEAR-VECTOR ( --- a-addr)
+\G Vector to execute when clearing all local variables at end of current
+\G definition.
+
 : !CSP ( --- )
 \G Store current stack pointer in CSP.
    SP@ CSP ! ;
@@ -1409,7 +1413,8 @@ VARIABLE LVARS ( --- a-addr)
     LVARS @ IF
 	$89 C, \ add LP+ instruction.
 	LVARS @ C, \ And the number of local slots to pop
-	0 LVARS ! 
+	0 LVARS !
+	LVAR-CLEAR-VECTOR @ EXECUTE
     THEN
     $15 C, \ Add return instruction.
     [ \ Quit compilation state.
@@ -1588,7 +1593,13 @@ M: >BODY ( xt --- a-addr)
 : DOES>  ( --- )
 \G Word that contains DOES> will change the behavior of the last created
 \G word such that it pushes its parameter field address onto the stack
-\G and then executes whatever comes after DOES> 
+\G and then executes whatever comes after DOES
+  LVARS @ IF
+    $89 C, \ add LP+ instruction.
+    LVARS @ C, \ And the number of local slots to pop
+    0 LVARS !
+    LVAR-CLEAR-VECTOR @ EXECUTE
+  THEN
   POSTPONE (;CODE)  
   $18 C,      \ Compile the R> primitive, which is the first
               \ instruction that the defined word performs.                   
@@ -1700,7 +1711,8 @@ VARIABLE COLDSTARTUP
 : QUIT ( --- )
 \G This word resets the return stack, resets the compiler state, the include
 \G buffer and then it reads and interprets terminal input.
-  NESTING OFF    
+  NESTING OFF
+  LVAR-CLEAR-VECTOR @ IF LVAR-CLEAR-VECTOR @ EXECUTE THEN
   R0 @ RP! TO-STATE OFF [ 
   TIB SRC ! 0 SID !
   INCLUDE-BUFFER INCLUDE-POINTER !  
@@ -1744,8 +1756,8 @@ VARIABLE COLDSTARTUP
     CURFILENAME C@ IF
 	COLDSTARTUP ON
     ELSE
-	." Welcome to Embeddable Forth version 0.1" CR
-	." Copyright 2025 L.C. Benschop MIT license" CR
+	." Welcome to Embeddable Forth version 0.2" CR
+	." Copyright 2025-2026 L.C. Benschop MIT license" CR
     THEN
   WARM ;
 

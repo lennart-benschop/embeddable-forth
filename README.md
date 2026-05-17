@@ -36,7 +36,7 @@ a virtual machine, but the differences are as follows:
   word. This FORTH has conventional byte code, one FORTH primitive per byte,
   unaligned operands. There are far more primitives and the set can still
   be extended.
-* This FORTH has floating point and local variable support is underway.
+* This FORTH has floating point and local variable support.
 
 Some of my own stuff that I wrote for Agon is also used in this FORTH
 version. In particular the floating point input and output routines
@@ -52,7 +52,7 @@ special case of these are special macros for single instructions.
 
 ## GETTING STARTED
 
-The makefile is set up to run out of the box on Linux. Timply type:
+The makefile is set up to run out of the box on Linux. Simply type:
 ```
 make
 ```
@@ -126,6 +126,8 @@ The following files are included:
   itself to the full FORTH system.
 * `forth_src/float.fs` source code for floating point support (included
   by `extend.fs`).
+* `forth_src/locals.fs` source code for local variable support (included
+  by `extend.fs`).
 * `forth_src/doglos.fs` script to generate `forth_glossary.txt`.
 * `forth_src/glosgen.fs` glossary generator tool.
 * `forth_src/mkdefdict.fs` tool te generate `default_dict.h` from `forth.img`.
@@ -134,6 +136,7 @@ The following files are included:
 * `examples/tetris.fs` The classic Tetris-like game for terminals, written 
   originally by Dirk Zoller in 1994.
 * `examples/tester.fs` and `examples/core.fs` A test suite for ANSI Forth.
+* `examples/testlocals.fs` A simple test and demo of local variables.
 * `examples/sunrise.fs` Computes sunrise and sunset times anywhere on
   Earth and makes a nice calendar.
 * `examples/compute_pi.fs` A program to compute PI to 6000 decimal places.

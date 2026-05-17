@@ -44,7 +44,7 @@ remove_engine(struct engine_state* state);
 struct dict_header {
   uint32_t magic;            // Magic number (0x54524F46) 
   uint32_t min_vm_level;     // Minimum VM level. 0x010000
-  uint32_t req_vm_featuress; // VM features used by this dicionary.
+  uint32_t req_vm_features; // VM features used by this dicionary.
   uint32_t img_size;  // Size in bytes of image stored in file or memory.
   uint32_t dict_size; // Total size of FORTH dictionary area in bytes.
   uint32_t entry_point;  // Initial instruction pointer (byte offset to start).

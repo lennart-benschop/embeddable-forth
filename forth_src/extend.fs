@@ -1,5 +1,5 @@
 \ Extensions to sod Forth kernel to make a complete Forth system.
-\ Copyright 1994 L.C. Benschop Eindhoven, The Netherlands.
+\ Copyright 2025-2026 L.C. Benschop Eindhoven, The Netherlands.
 \ The program is released under the MIT license
 \ There is NO WARRANTY.
 
@@ -75,7 +75,7 @@ VARIABLE FENCE ( --- a-addr)
 
 : PREVIOUS ( --- )
 \G Remove the last wordlist from search order.
-   -1 #ORDER +! ;
+  #ORDER @ 1- 1 MAX  #ORDER ! ;
  
 VARIABLE #THREADS ( --- a-addr)
 \G This variable holds the number of threads a word list will have.
@@ -90,7 +90,7 @@ VARIABLE #THREADS ( --- a-addr)
 CONTEXT #ORDER @ 1- CELLS + @ CURRENT ! ;
 
 : FORTH ( --- )
-\G REplace the last wordlist in the search order with FORTH-WORDLIST
+\G Replace the last wordlist in the search order with FORTH-WORDLIST
   FORTH-WORDLIST CONTEXT #ORDER @ 1- CELLS + ! ;
 
 1 #THREADS !
@@ -388,6 +388,35 @@ DEFINITIONS
     TO-STATE OFF
 ;
 
+: D+! ( d a-addr --- )
+\G Add double number d to the double variable at a-addr)
+  DUP >R 2@ D+ R> 2! ;
+
+
+: 2VALUE ( n --- ) 
+\G Create a variable that returns its value when executed, prefix it with TO
+\G to change its value.    
+    CREATE , , IMMEDIATE DOES>
+    STATE @ IF
+	POSTPONE LITERAL
+	CASE
+	    TO-STATE @
+	    0 OF POSTPONE 2@ ENDOF
+	    1 OF POSTPONE 2! ENDOF
+	    2 OF POSTPONE D+! ENDOF
+	ENDCASE
+    ELSE
+	CASE
+	    TO-STATE @
+	    0 OF 2@ ENDOF
+	    1 OF 2! ENDOF
+	    2 OF D+! ENDOF
+	ENDCASE
+    THEN
+    TO-STATE OFF
+;
+
+
 VARIABLE TIMER
 : TIMER-INT ( x ---) 
 \G Timer interrupt handler.
@@ -408,6 +437,7 @@ VARIABLE TIMER
 CAPS ON
 
 S" forth_src/float.fs" INCLUDED
+S" forth_src/locals.fs" INCLUDED
 
 HERE FENCE !
 

@@ -24,7 +24,7 @@ forth_main.o: src/forth_main.c src/forth_engine.h  src/default_dict.h
 forth_io.o: src/forth_io.c src/forth_engine.h
 	${CC}  $(CFLAGS) -o $@ -c $<
 
-forth.img: kernel.img bforth forth_src/extend.fs forth_src/float.fs
+forth.img: kernel.img bforth forth_src/extend.fs forth_src/float.fs forth_src/locals.fs
 	./bforth -d kernel.img forth_src/extend.fs
 
 src/default_dict.h: bforth forth.img forth_src/mkdefdict.fs

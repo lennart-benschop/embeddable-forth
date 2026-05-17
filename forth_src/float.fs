@@ -1,13 +1,8 @@
-\ Floating point wordset for eZ80 Agon FORTH.
-\ Copyright 2025, L.C. Benschop. MIT license
+\ Floating point wordset for Embeddable  FORTH.
+\ Copyright 2025-2026, L.C. Benschop. MIT license
 
 \ Note: VARIABLEs FP and F0 already defined in kernel.
 
-\ Floating point format:
-\ byte 0..1 little endian: bit 15 is sign (0 = positive, 1 is negative).
-\           bits 14..0 offset exponent. 16384 is means range 1.0<=x<2.0
-\ bytes 2..7 48-bit significand little endian order, scaled integer,
-\            MSB usually set.
 
 $90
 OPCODE F+ ( F: r1 r2 --- r3)
