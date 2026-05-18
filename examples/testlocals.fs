@@ -56,6 +56,6 @@ CR .( TEST5 should print 11 2649: )
 CR .( TEST6 should print 1940.4 6:)
 1 8 3 TEST6 f. . 
 
-' test6 100 dump
+\ ' test6 100 dump
 
 CR BYE

@@ -82,7 +82,7 @@ VARIABLE #THREADS ( --- a-addr)
 
 : WORDLIST ( --- wid)
 \G Make a new wordlist and give its address.
-    HERE DUP VOC-LINK @ , VOC-LINK !
+    ALIGN HERE DUP VOC-LINK @ , VOC-LINK !
     #THREADS @ , HERE #THREADS @ CELLS DUP ALLOT ERASE ;
 
 : DEFINITIONS  ( --- )

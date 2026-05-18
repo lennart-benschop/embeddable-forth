@@ -1424,7 +1424,7 @@ VARIABLE LVAR-CLEAR-VECTOR ( --- a-addr)
 : (POSTPONE) ( --- )
 \G Runtime for POSTPONE.
 \ has inline argument.
-  R> DUP @ SWAP CELL+ >R 
+  R> DUP @U SWAP CELL+ >R 
   DUP >NAME C@ 64 AND IF EXECUTE ELSE COMPILE, THEN 
 ;  
 
@@ -1468,7 +1468,7 @@ VARIABLE LVAR-CLEAR-VECTOR ( --- a-addr)
  2 ?PAIRS HERE OVER - 2 -  SWAP H!U ; IMMEDIATE
 
 : ELSE ( x1 n --- x2 n)
-\G part of IF ELSE THEN construction.e
+\G part of IF ELSE THEN construction.
   $02 C, HERE 2 ALLOT 2 2SWAP POSTPONE THEN ; IMMEDIATE 
 
 : WHILE  ( x1 n1  --- x2 n2 x1 n3 )
