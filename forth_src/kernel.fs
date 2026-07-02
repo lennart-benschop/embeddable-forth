@@ -1333,7 +1333,7 @@ VARIABLE TO-STATE ( --- a-addr)
 		    DUP $1000000 U< IF
 			$0B C, T, \ 24-bit negative literal opcode
 		    ELSE
-			$0C C, , \ Full 32-bit literal
+			NEGATE $0C C, , \ Full 32-bit literal
 		    THEN
 		THEN
 	    THEN
@@ -1756,7 +1756,7 @@ VARIABLE COLDSTARTUP
     CURFILENAME C@ IF
 	COLDSTARTUP ON
     ELSE
-	." Welcome to Embeddable Forth version 0.2" CR
+	." Welcome to Embeddable Forth version 0.3" CR
 	." Copyright 2025-2026 L.C. Benschop MIT license" CR
     THEN
   WARM ;

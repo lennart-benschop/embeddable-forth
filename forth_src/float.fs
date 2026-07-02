@@ -390,7 +390,11 @@ VARIABLE EXP
 	DUP 0< 0= IF
 	    10.0E FI** F*
 	ELSE
-	    NEGATE 10.0E FI** F/
+	    NEGATE DUP 308 > IF
+	      308 - 10.0E FI** F/
+	      308
+	    THEN
+	    10.0E FI** F/
 	THEN
 	R> IF FNEGATE  THEN
     ELSE 2DROP	
@@ -447,6 +451,10 @@ FVARIABLE F-LIMIT
 	    NEGATE EXP @ + DUP 0< IF
 		NEGATE 10.0e FI** F/
 	    ELSE
+		DUP 308 > IF         \ do multiply in two stages
+		 308 - 10.0e FI** F* \ we cannot multiply by more than 1e308
+		 308
+		THEN
 		10.0e FI** F* \ Try to get num in range 10*(prec-1)..10**prec
 	    THEN
 	    10.0e EXP @ FI** 0.5E F- F-LIMIT F!

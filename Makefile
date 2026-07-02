@@ -3,7 +3,7 @@
 # The program is released under the GNU General Public License version 2 or
 # later. There is NO WARRANTY.
 
-CFLAGS=-O3 -DFORTH_ALLOW_UNALIGNED
+CFLAGS=-O3 -Wall -DFORTH_ALLOW_UNALIGNED
 #CFLAGS=-ggdb
 
 default: forth forth_src/forth_glossary.txt 

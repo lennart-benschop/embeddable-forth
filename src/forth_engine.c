@@ -99,7 +99,7 @@ run_engine(struct engine_state* state )
 #else  
 #define GET_LIT16() (ip+=2,ip[-2] | (ip[-1]<<8))
 #define GET_LIT24() (ip+=3,ip[-3] | (ip[-2]<<8) | (ip[-1]<<16))
-#define GET_LIT32() (ip+=4,ip[-4] | (ip[-3]<<8) | (ip[-2]<<16) |(ip[-1]<<24))
+#define GET_LIT32() (ip+=4,ip[-4] | (ip[-3]<<8) | (ip[-2]<<16) |((uint32_t)ip[-1]<<24))
 #endif  
   uint8_t *dict_base = state->dict;
   uint8_t *ip = state->ip;
@@ -359,7 +359,8 @@ run_engine(struct engine_state* state )
       tos = ~tos;
       break;
     case OP_ABS:
-      tos = abs(tos);
+      //tos = abs(tos); // UB checker in zig cc trips on it when tos=-$80000000
+      if (tos & 0x80000000) tos=-tos;
       break;
     case OP_TIMES: /* * */            
       t1 = *sp++;
@@ -396,7 +397,7 @@ run_engine(struct engine_state* state )
       break;
     case OP_FMSLASHMOD: /* FM/MOD */       
       {
-	int64_t dt = ((int64_t)sp[0] << 32) | sp[1];
+	int64_t dt = ((uint64_t)sp[0] << 32) | sp[1];
 	sp++;
 	if (tos == 0 || (dt==0x8000000000000000LL && tos==-1)) {
 	  sp[0] = -1;
@@ -414,7 +415,7 @@ run_engine(struct engine_state* state )
       break;
     case OP_SMSLASHREM: /* SM/REM */       
       {
-	int64_t dt = ((int64_t)sp[0] << 32) | sp[1];
+	int64_t dt = ((uint64_t)sp[0] << 32) | sp[1];
 	sp++;
 	if (tos == 0 || (dt==0x8000000000000000LL && tos==-1)) {
 	  sp[0] = -1;
@@ -503,8 +504,8 @@ run_engine(struct engine_state* state )
       break;			
     case OP_DSLAHSMOD:  /* D/MOD */     
       {
-	int64_t dt1 = ((int64_t)tos << 32) | sp[0];
-	int64_t dt2 = ((int64_t)sp[1]<<32) | sp[2];
+	int64_t dt1 = ((uint64_t)tos << 32) | sp[0];
+	int64_t dt2 = ((uint64_t)sp[1]<<32) | sp[2];
 	int64_t dt3;
 	if (dt1 == 0 || (dt1 == -1LL && dt2==0x8000000000000000LL)) {
 	  dt3 = -1LL;
@@ -513,7 +514,7 @@ run_engine(struct engine_state* state )
 	  dt3 = dt2 / dt1;
 	  dt2 = dt2 % dt1;
 	  if (((dt2 ^ dt1) & 0x8000000000000000LL) && dt2 != 0) {
-	    dt3 ==1;
+	    dt3 -= 1;
 	    dt2 += dt1;
 	  }
 	}
@@ -559,7 +560,7 @@ run_engine(struct engine_state* state )
       break;
     case OP_D2SLASH: /* D2/ */
       {
-	int64_t dt = ((int64_t)tos<<32) | *sp;
+	int64_t dt = ((uint64_t)tos<<32) | *sp;
 	dt >>= 1;
 	tos = dt >> 32;
 	*sp = dt;
@@ -784,7 +785,7 @@ run_engine(struct engine_state* state )
       break;
     case OP_FETCHU: /* @U unaligned */
       tos = *(dict_base+tos) | (*(dict_base+tos+1)<<8) |
-	(*(dict_base+tos+2)<<16) | (*(dict_base+tos+3)<<24);
+	(*(dict_base+tos+2)<<16) | ((uint32_t)*(dict_base+tos+3)<<24);
       break;
     case OP_STOREU: /* !U unaligned */
       t1 = *sp++;
@@ -809,8 +810,8 @@ run_engine(struct engine_state* state )
       break;
     case OP_DLESS:
       {
-      	int64_t dt1 = ((int64_t)tos << 32) | *sp++;
-	int64_t dt2 = ((int64_t)sp[0]<<32) | sp[1];
+      	int64_t dt1 = ((uint64_t)tos << 32) | *sp++;
+	int64_t dt2 = ((uint64_t)sp[0]<<32) | sp[1];
 	sp+=2;
 	tos = -(dt2 < dt1);
       }
@@ -1054,7 +1055,7 @@ run_engine(struct engine_state* state )
 	uint64_t dt =0;
 	for (t1=0; t1<8; t1++) {
 	  dt <<=8;
-	  dt |= *(dict_base+tos+t1);
+	  dt |= *(dict_base+tos+7-t1);
 	}
 	fp--;
 	*(uint64_t*)fp = dt;

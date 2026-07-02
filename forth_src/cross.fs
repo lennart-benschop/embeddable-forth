@@ -211,7 +211,7 @@ VARIABLE CSP   \ Stack pointer checking between : and ;
 		    DUP $1000000 U< IF
 			$0B C,-T T,-T \ 24-bit negative literal opcode
 		    ELSE
-			$0C C,-T ,-T \ Full 32-bit literal
+			NEGATE $0C C,-T ,-T \ Full 32-bit literal
 		    THEN
 		THEN
 	    THEN
