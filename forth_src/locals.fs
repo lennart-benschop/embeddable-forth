@@ -103,6 +103,7 @@ DEFINITIONS \ Restore the old definitions.
   THEN
   LVARS @ >R \ Number of local vars in previous frames.
   \ Create a cell to hold the last var index of the current frame.
+  TMPDP @ ALIGNED TMPDP !
   TMPDP @ LASTFRAME-P !
   1 CELLS TMPDP +!
   LVARS @ LASTFRAME-P @ !

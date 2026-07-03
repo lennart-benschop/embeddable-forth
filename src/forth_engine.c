@@ -1032,11 +1032,28 @@ run_engine(struct engine_state* state )
       break;
     case OP_FFETCH: /* F@ double-precision */
       fp--;
+#if FORTH_ALLOW_UNALIGNED  
       fp[0] = *(double*)(dict_base + tos);
+#else
+      {
+	uint64_t *td= (uint64_t*)fp;
+	t1 = *(uint32_t*)(dict_base + tos);
+	t2 = *(uint32_t*)(dict_base + tos + 4);
+	*td = t1 | ((uint64_t)t2 << 32);
+      }
+#endif      
       tos = *sp++;
       break;
     case OP_FSTORE: /* F! double-precision */
+#if FORTH_ALLOW_UNALIGNED     
       *(double*)(dict_base + tos) = fp[0];
+#else
+      {
+	uint64_t td= *(uint64_t*)fp;
+        *(uint32_t*)(dict_base + tos) = td;
+        *(uint32_t*)(dict_base + tos + 4) = td >> 32;	
+      }      
+#endif      
       fp++;
       tos = *sp++;
       break;
