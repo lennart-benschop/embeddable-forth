@@ -23,7 +23,6 @@ static struct termios newterm;
 static int tflags;
 static int realterm;
 int keybuf,raw;
-static int childpid;
 
 #ifndef O_NDELAY
 #define O_NDELAY O_NONBLOCK
@@ -149,7 +148,6 @@ static int kbhit(void)
 
 static void putch(int c)
 {
-  int res;
   char k=c;
   if(raw)while(write(1,&k,1)<0);   
   else putchar(c);
@@ -189,7 +187,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     break;
   case 2: /* ACCEPT */
     {
-      char *p = dict_base + sp[1];
+      uint8_t *p = dict_base + sp[1];
       uint8_t c;
       uint32_t i=0;
       do {
@@ -213,7 +211,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
   case 4: /* TYPE */
     { 
       uint32_t i;
-      char *p=dict_base + sp[1];
+      uint8_t *p=dict_base + sp[1];
       for (i=0; i<sp[0]; i++)
 	putch(*p++);
       sp+=2;
@@ -248,7 +246,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
 	sp[1]=0;
 	sp[0]=-201;
       } else {
-	fileids[i] = fopen(name_addr,filemodes[sp[0]]);
+	fileids[i] = fopen((char*)name_addr,filemodes[sp[0]]);
 	if (fileids[i] == 0) {
 	  sp++;
 	  sp[1]=0;
@@ -339,13 +337,13 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     } else {
       char *p;
       clearerr(fileids[sp[0]]);
-      p = fgets(dict_base+sp[2],sp[1],fileids[sp[0]]);
+      p = fgets((char*)dict_base+sp[2],sp[1],fileids[sp[0]]);
       if (ferror(fileids[sp[0]])) {
 	sp[2] = 0;
 	sp[1] = 0;
 	sp[0] = -200;
       } else {
-	uint32_t l=strlen(dict_base+sp[2]);
+	uint32_t l=strlen((char*)dict_base+sp[2]);
 	if (l==0 || feof(fileids[sp[0]]) || p==NULL) {
 	  sp[2] = 0;
 	  sp[1] = 0;
@@ -378,14 +376,14 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     break;
   case 0x18: /* DELETE-FILE */
     MAKE_ASCIIZ(dict_base+sp[1],sp[0]);
-    rc=remove(name_addr);
+    rc=remove((char*)name_addr);
     sp++;
     sp[0] = rc;
     break;
   case 0x19: /* SYSTEM */
     MAKE_ASCIIZ(dict_base+sp[1],sp[0]);
     systerm();
-    rc=system(name_addr);
+    rc=system((char*)name_addr);
     forthterm();
     sp++;
     sp[0] = rc;
@@ -411,7 +409,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     break;
   case 0x1D: /* CHDIR */
     MAKE_ASCIIZ(dict_base+sp[1],sp[0]);
-    rc = chdir(name_addr);
+    rc = chdir((char*)name_addr);
     sp++;
     sp[0] = rc;
     break;
