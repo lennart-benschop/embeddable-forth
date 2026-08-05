@@ -330,7 +330,7 @@ DEFINITIONS
 
 : AT-XY ( x y --- )
 \G Put screen cursor at location (x,y) (0,0) is upper left corner.
-  27 EMIT [CHAR] [ EMIT SWAP 1+  SWAP 0 .R [CHAR] ; EMIT 
+  27 EMIT [CHAR] [ EMIT 1+ 0 .R [CHAR] ; EMIT 
    1+ 0 .R [CHAR] H EMIT ;
 
 : PAGE 
