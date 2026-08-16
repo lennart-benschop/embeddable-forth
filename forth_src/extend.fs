@@ -438,6 +438,7 @@ CAPS ON
 
 S" forth_src/float.fs" INCLUDED
 S" forth_src/locals.fs" INCLUDED
+S" forth_src/graphics.fs" INCLUDED
 
 HERE FENCE !
 

@@ -104,6 +104,26 @@ sources:
 make cross
 ```
 
+## GRAPHICS SUPPORT
+
+In order to use graphics, you need to have the term_bitmap project
+as well (from the same Github user). Make sure it is compiled and then
+edit the Makefile to change ```USE_TBM=n``` to ```USE_TBM=y``` and check
+that ```TBM_DIR``` is correct. Do Make clean and make and FORTH should
+support graphics now.
+
+Now make sure to specify which graphics mode you support. For example in a
+terminal supporting Sixel graphics, type:
+'''
+export TBM_MODE=sixel
+```
+The sunrise.fs program can now display a nice graph of sunrise and sunset times
+throughout the year.
+```
+./forth examples/sunrise.fs
+2026 YEAR-GRAPH
+```
+
 # FILES
 
 The following files are included:

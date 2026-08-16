@@ -18,11 +18,20 @@
 #include "forth_engine.h"
 #include <stdlib.h>
 
+#ifdef USE_TERM_BITMAP
+#include "term_bitmap.h"
+#endif
+
 static struct termios oldterm;
 static struct termios newterm;
 static int tflags;
 static int realterm;
 int keybuf,raw;
+
+#ifdef USE_TERM_BITMAP
+static void *tbm;
+static unsigned int tbm_width,tbm_height,tbm_ncolors,tbm_mode;
+#endif
 
 #ifndef O_NDELAY
 #define O_NDELAY O_NONBLOCK
@@ -425,6 +434,95 @@ void forth_io(uint8_t opcode, struct engine_state *state)
       sp[0] =0;
     }
     break;
+  case 0xc0: /* GRAHICS-PARAMS */
+#ifndef USE_TERM_BITMAP
+    sp-=3;
+    sp[0] = 0;
+    sp[1] = 0;
+    sp[2] = 0;
+    break;
+#else
+    if (tbm_width == 0) {
+      tbm_get_recommended(&tbm_width,&tbm_height,&tbm_ncolors,&tbm_mode);
+    }
+    if (tbm_ncolors>16) tbm_ncolors = 16;
+    sp-=3;
+    sp[2] = tbm_width;
+    sp[1] = tbm_height;
+    sp[0] = tbm_ncolors;
+    break;
+  case 0xc1: /* GRAPHICS-MODE */
+    if (tbm_width == 0) {
+      tbm_get_recommended(&tbm_width,&tbm_height,&tbm_ncolors,&tbm_mode);
+    }
+    if (tbm_ncolors>16) tbm_ncolors = 16;
+    tbm = tbm_new_screen(tbm_width, tbm_height, 0, 0, tbm_ncolors,tbm_mode);
+    break;
+  case 0xc2: /* TEXT-MODE */
+    if (tbm) {
+      tbm_delete(tbm);
+      tbm=NULL;
+    }
+    break;
+  case 0xc3: /* REDRAW */
+    systerm();
+    if (tbm) tbm_redraw(tbm);
+    forthterm();
+    break;
+  case 0xc4: /* CLG */
+    if (tbm) tbm_clear(tbm);
+    break;
+  case 0xc5: /* SETFG-G */
+    if (tbm) tbm_setfg(tbm,sp[0]);
+    sp++;
+    break;
+  case 0xc6: /* SETPEN */
+    if (tbm) tbm_setpen(tbm,sp[3],sp[2],sp[1],sp[0]);
+    sp+=4;
+    break;
+  case 0xc7: /* PLOTDOT */
+    if (tbm) tbm_plotdot(tbm,sp[1],sp[0]);
+    sp+=2;
+    break;
+  case 0xc8: /* MOVETO */
+    if (tbm) tbm_moveto(tbm,sp[1],sp[0]);
+    sp+=2;
+    break;
+  case 0xc9: /* LINETO */
+    if (tbm) tbm_lineto(tbm,sp[1],sp[0]);
+    sp+=2;
+    break;
+  case 0xca: /* TRIANGLE */
+    if (tbm) tbm_triangle(tbm,sp[3],sp[2],sp[1],sp[0]);
+    sp+=4;
+    break;
+  case 0xcb: /* CIRCLE */
+    if (tbm) tbm_circle(tbm,sp[2],sp[1],sp[0],false);
+    sp+=3;
+    break;
+  case 0xcc: /* CIRCLE-F */
+    if (tbm) tbm_circle(tbm,sp[2],sp[1],sp[0],true);
+    sp+=3;
+    break;
+  case 0xcd: /* PLOTTEXT */
+    MAKE_ASCIIZ(dict_base+sp[1],sp[0]);
+    if (tbm) tbm_plottext(tbm,(char*)name_addr);
+    sp+=2;
+    break;
+  case 0xce: /* GETDOT */
+    if (tbm) sp[1] = tbm_getdot(tbm,sp[1],sp[0]);
+    sp+=1;
+    break;
+  case 0xcf: /* GETPOS */
+    sp-=2;
+    {
+      int x,y;
+      if (tbm) tbm_getpos(tbm,&x,&y);
+      sp[0]=y;
+      sp[1]=x;
+    }
+    break;
+#endif    
   default:
     /* unknown opcode */
     printf("Illegal OS call %08x\n",opcode);
