@@ -17,10 +17,14 @@
 #include <stdint.h>
 #include "forth_engine.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 #ifdef USE_TERM_BITMAP
 #include "term_bitmap.h"
 #endif
+
+#define HIST_ENTRIES 16
+#define HIST_LINELEN 128
 
 static struct termios oldterm;
 static struct termios newterm;
@@ -104,7 +108,7 @@ void forth_io_init(int argc, char **argv)
 #ifdef SIGTSTP
   signal(SIGTSTP,stophandler);
   signal(SIGCONT,conthandler);
-#endif 
+#endif
 }
 
 void forth_io_exit(void)
@@ -155,12 +159,196 @@ static int kbhit(void)
   } else return 1;
 }
 
+static int ekey(void)
+{
+  int ch2;
+  int ch = getch();
+  if (ch == 27 && kbhit()) {
+    ch2 = getch();
+    if (ch2 == '[' && kbhit()) {
+      ch = -getch(); // CHeck the ANSI sequences for cursor keys ESC [ letter
+                     // and return them as negative numbers
+    }
+  }
+  return ch;
+}
+
 static void putch(int c)
 {
   char k=c;
   if(raw)while(write(1,&k,1)<0);   
   else putchar(c);
 }
+
+static void typestr(char *p, int len)
+{
+  int i;
+  for(i=0; i<len;i++) putch(p[i]);
+}
+
+static void moveleft(int n)
+{
+  char buf[16];
+  if (n>0) {
+    sprintf(buf,"\033[%dD",n);
+    typestr(buf,strlen(buf));
+  }
+}
+
+static void moveright(int n)
+{
+  char buf[16];
+  if (n>0) {
+    sprintf(buf,"\033[%dC",n);
+    typestr(buf,strlen(buf));
+  }
+}
+
+struct {
+  unsigned int len;
+  char line[HIST_LINELEN];
+} history_buf[HIST_ENTRIES];
+unsigned int history_index = 0;
+
+void put_hist(char *p, int len)
+{
+  if (len > HIST_LINELEN) len = HIST_LINELEN;
+  if (len > 0) {
+    memcpy(history_buf[history_index].line, p, len);
+    history_buf[history_index].len = len;
+    history_index++;
+    if (history_index == HIST_ENTRIES) history_index = 0;      
+  }
+}
+
+
+int get_hist(char *p, int maxlen, int index)
+{
+  int len = maxlen;
+  int idx;
+  if (index > 0 && index <= HIST_LINELEN) {
+    idx = history_index - index;
+    if (idx < 0) idx+=HIST_ENTRIES;
+    if (len > history_buf[idx].len) len = history_buf[idx].len;
+    memcpy(p, history_buf[idx].line, len);
+  }
+  return len;
+}
+
+static int editline(char *p, int maxlen)
+{
+  int c;
+  unsigned int histindex=0;
+  uint32_t curlen = 0;
+  uint32_t i=0;
+  uint32_t j;
+  bool is_finished = false;
+  do {
+    c = ekey();
+    switch(c) {
+    case 1: // Ctrl-A
+    case -72: // Home key  Cursor to start of line.
+      moveleft(i);
+      i=0;
+      break;
+    case 5: // Ctrl-E
+    case -70: // End key Cursor to end of line
+      moveright(curlen-i);
+      i=curlen;
+      break;
+    case 4: // Ctrl-D Delete forward.
+      if (i<curlen) {
+	for (j=i; j<curlen;j++) p[j]=p[j+1];
+	curlen--;
+	typestr(p+i, curlen-i); putch(' ');moveleft(curlen-i+1);
+      }
+      break;
+    case 8: // Ctrl-H
+    case 127: // DEL Delete backward.
+      if (i>0) {
+	moveleft(1);
+	i--;
+	for (j=i; j<curlen;j++) p[j]=p[j+1];
+	curlen--;
+	typestr(p+i, curlen-i); putch(' ');moveleft(curlen-i+1);	
+      }
+      break;      
+    case 21: // Ctrl-U delete entire line.
+      moveleft(i);
+      i=0;
+      for (j=0; j<curlen; j++) putch(' ');
+      moveleft(curlen);
+      curlen = 0;
+      break;
+    case 11: // Ctrl-K delete to end of line
+      for (j=i; j<curlen; j++) putch(' ');
+      moveleft(curlen-i);
+      curlen = i;
+      break;
+    case 2:   // Ctrl-B
+    case -68: // Cursor left
+      if (i>0) {
+	i--;
+	moveleft(1);
+      }
+      break;
+    case 6:   // Ctrl-F
+    case -67: // Cursor right
+      if (i<curlen) {
+	i++;
+	moveright(1);
+      }
+      break;
+    case 16: // Ctrl-P
+    case -65: // Cursor-Up Go back in history
+      if (histindex < HIST_ENTRIES) {
+	histindex++;
+	moveleft(i);
+	for (j=0; j<curlen; j++) putch(' ');
+	moveleft(curlen);
+	curlen = get_hist(p, maxlen, histindex);
+	typestr(p, curlen);
+	i=curlen;
+      }
+      break;
+    case 14: // Ctrl-N
+    case -66: // Cursor-Down Go forward in history
+      if (histindex > 1) {
+	histindex--;
+	moveleft(i);
+	for (j=0; j<curlen; j++) putch(' ');
+	moveleft(curlen);
+	curlen = get_hist(p, maxlen, histindex);
+	typestr(p, curlen);
+	i=curlen;
+      } else if (histindex == 1) {
+	histindex--;
+	moveleft(i);
+	i=0;
+	for (j=0; j<curlen; j++) putch(' ');
+	moveleft(curlen);
+	curlen = 0;	
+      }
+      break;
+    case 10:
+    case 13:
+      is_finished = true;
+      break;
+    default:
+      if (curlen < maxlen && c>=' ' && c<='~') {
+	for (j=curlen; j>i; j--) p[j]=p[j-1];
+	p[i]=c;
+	typestr(p+i,curlen+1-i);i++;curlen++;moveleft(curlen-i);
+      }      
+    }
+  } while (!is_finished);
+  moveright(curlen-i);
+  putch(' ');
+  put_hist(p,curlen);
+  return curlen;
+}
+
+
 
 struct itimerval tt;
 
@@ -189,7 +377,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
   int rc;
   switch (opcode) {
   case 0: /* KEY */
-    *--sp=getch();
+    *--sp=ekey();
     break;
   case 1:
     *--sp=kbhit();
@@ -197,21 +385,8 @@ void forth_io(uint8_t opcode, struct engine_state *state)
   case 2: /* ACCEPT */
     {
       uint8_t *p = dict_base + sp[1];
-      uint8_t c;
-      uint32_t i=0;
-      do {
-	c = getch();
-	if (c == '\b' || c==0x7f) {
-	  if (i>0) {
-	    putch('\b');putch(' ');putch('\b'); i--;p--;
-	  }
-	} else if (i < sp[0] && c>=' ' && c<='~') {
-	  *p++=c;putch(c);i++;
-	}	 
-      } while (c != '\r' && c != '\n');
-      putch(' ');
+      sp[1] = editline((char*)p,sp[0]);
       sp++;
-      sp[0] = i;
     }
     break;
   case 3: /* EMIT */

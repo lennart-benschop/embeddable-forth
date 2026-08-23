@@ -9,6 +9,10 @@
 : \G POSTPONE \ ; IMMEDIATE
 \G comment till end of line for inclusion in glossary.
 
+: .OK
+  STATE @ 0= IF ." OK" THEN CR ;
+' .OK PROMPT !
+
 \ PART 1: MISCELLANEOUS WORDS.
 
 : ?TERMINAL ( ---f)

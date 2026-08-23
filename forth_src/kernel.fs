@@ -1707,6 +1707,10 @@ VARIABLE ERRORS ( --- a-addr)
 VARIABLE NESTING
 \G Variable to hold nesting for conditional compilation.
 
+VARIABLE PROMPT
+\G variable to hold the execution address for the prompt.
+
+
 VARIABLE COLDSTARTUP
 : QUIT ( --- )
 \G This word resets the return stack, resets the compiler state, the include
@@ -1722,7 +1726,7 @@ VARIABLE COLDSTARTUP
       ELSE
 	  REFILL DROP ['] INTERPRET
       THEN CATCH DUP 0= IF 
-	  DROP STATE @ 0= IF ." OK" THEN CR
+	  DROP PROMPT @ DUP IF EXECUTE ELSE DROP THEN
    ELSE \ throw occured.
      DUP -2 = IF
       ERROR$ @ COUNT TYPE SPACE
@@ -1756,7 +1760,7 @@ VARIABLE COLDSTARTUP
     CURFILENAME C@ IF
 	COLDSTARTUP ON
     ELSE
-	." Welcome to Embeddable Forth version 0.3" CR
+	." Welcome to Embeddable Forth version 0.4" CR
 	." Copyright 2025-2026 L.C. Benschop MIT license" CR
     THEN
   WARM ;
