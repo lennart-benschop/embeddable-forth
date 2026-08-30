@@ -18,6 +18,7 @@
 #include "forth_engine.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #ifdef USE_TERM_BITMAP
 #include "term_bitmap.h"
@@ -257,7 +258,12 @@ static int editline(char *p, int maxlen)
       i=curlen;
       break;
     case 4: // Ctrl-D Delete forward.
-      if (i<curlen) {
+      if (curlen == 0) {
+	putch('\n');
+	set_irq(ENGINE_EXIT_IRQ);
+	return 0;
+      }
+      else if (i<curlen) {
 	for (j=i; j<curlen;j++) p[j]=p[j+1];
 	curlen--;
 	typestr(p+i, curlen-i); putch(' ');moveleft(curlen-i+1);
@@ -348,7 +354,37 @@ static int editline(char *p, int maxlen)
   return curlen;
 }
 
-
+void get_xy(unsigned int *x, unsigned int *y)
+{
+  char numbuf[14];
+  char c;
+  int i;
+  *x=-1;
+  *y=-1;
+  typestr("\e[6n",4);
+  while (getch() != 0x1b)
+    ;
+  if (getch() != '[')
+    return;
+  i=0;
+  while (isdigit(c=getchar())) {
+    if (i<13) {
+      numbuf[i++]=c;
+    }
+  }
+  numbuf[i]=0;
+  *y=atoi(numbuf)-1;
+  if (c != ';') return;
+  i=0;
+  while (isdigit(c=getchar())) {
+    if (i<13) {
+      numbuf[i++]=c;
+    }
+  }
+  numbuf[i]=0;
+  *x=atoi(numbuf)-1;
+  if (c != 'R') return;  
+}
 
 struct itimerval tt;
 
@@ -538,7 +574,7 @@ void forth_io(uint8_t opcode, struct engine_state *state)
 	  sp[1] = -1;
 	  sp[0] = 0;
 	}
-      }      
+     }      
     }
     break;
   case 0x17: /* WRITE-LINE */
@@ -608,6 +644,10 @@ void forth_io(uint8_t opcode, struct engine_state *state)
       sp++;
       sp[0] =0;
     }
+    break;
+  case 0x1F: /* GET-XY */
+    sp-=2;
+    get_xy(&sp[1],&sp[0]);
     break;
   case 0xc0: /* GRAHICS-PARAMS */
 #ifndef USE_TERM_BITMAP

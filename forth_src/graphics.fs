@@ -81,3 +81,11 @@ $C0CF
 : SETBG ( n ---0
 \G Set text background colour.
   27 EMIT [CHAR] [ EMIT DUP 3 RSHIFT 1 AND 60 * SWAP 7 AND + 40 + 0 .R [CHAR] m EMIT ;
+
+$C01F
+2OPCODE GET-XY ( --- x y )
+\G Return the current cursor position.
+
+: SCREEN-SIZE ( --- cols rows)
+\G Return the size of the text screen.
+GET-XY 999 999 AT-XY GET-XY 2SWAP AT-XY 1+ SWAP 1+ SWAP ;
