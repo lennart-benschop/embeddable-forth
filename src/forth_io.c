@@ -394,8 +394,15 @@ static void setalarm(unsigned int usecs)
  tt.it_interval.tv_sec=0;
  tt.it_interval.tv_usec=0;
  tt.it_value.tv_sec=usecs/1000000;
- tt.it_value.tv_usec=usecs%1000000; 
+ tt.it_value.tv_usec=usecs%1000000;
  setitimer(ITIMER_REAL,&tt,0);
+}
+
+struct timeval now;
+static void current_time(uint64_t *centisecs)
+{
+  gettimeofday(&now, NULL);
+  *centisecs = (uint64_t)now.tv_sec*100 + now.tv_usec/10000;
 }
 
 #define MAKE_ASCIIZ(start,len) (name_addr=start,name_len=len,	\
@@ -452,6 +459,15 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     break;
   case 0xb: /* USLEEP */
     usleep(*sp++);
+    break;
+  case 0xc: /* CURRENT-TIME */
+    {
+      uint64_t centisecs;
+      current_time(&centisecs);
+      sp-=2;
+      sp[1] = centisecs & 0xffffffff;
+      sp[0] = centisecs >> 32;
+    }
     break;
   case 0x10: /* OPEN-FILE */
     MAKE_ASCIIZ(dict_base+sp[2],sp[1]);

@@ -421,17 +421,16 @@ DEFINITIONS
 ;
 
 
-VARIABLE TIMER
-: TIMER-INT ( x ---) 
-\G Timer interrupt handler.
-  1 TIMER +! RTI
-;
-
 [DEFINED] USLEEP [IF]
 : MS ( n --- )
 \G Delay for n milliseconds.
   1000 * USLEEP ;
 [ELSE]
+VARIABLE TIMER
+: TIMER-INT ( x ---) 
+\G Timer interrupt handler.
+  1 TIMER +! RTI
+;
 : MS ( n --- )
 \G Delay for n milliseconds.
   ['] TIMER-INT $30 ! 1000 * SETALARM TIMER @

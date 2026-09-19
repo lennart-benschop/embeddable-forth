@@ -34,7 +34,7 @@ BOARD-WIDTH MARGIN 2* 2 + + CONSTANT TOTAL-ROW-SIZE
 BOARD-HEIGHT MARGIN 2* 2 + + CONSTANT TOTAL-ROWS
 
 VARIABLE SEED 
-TIMER @  SEED !
+CURRENT-TIME DROP SEED !
 
 : RAND ( n1 --- n2)
 \G A simple random generator return a number in range 0..n2-1

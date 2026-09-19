@@ -529,6 +529,9 @@ $C00B
 2OPCODE USLEEP ( n ---)
 \G sleep for n microseconds
 
+$C00C
+2OPCODE CURRENT-TIME ( --- d)
+\G Return the current time as an integer in centiseconds since Jan 1, 1970.
 
 $C1
 OPCODE SP@      ( --- a-addr)
