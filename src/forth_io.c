@@ -399,10 +399,10 @@ static void setalarm(unsigned int usecs)
 }
 
 struct timeval now;
-static void current_time(uint64_t *centisecs)
+static void current_time(uint64_t *microsecs)
 {
   gettimeofday(&now, NULL);
-  *centisecs = (uint64_t)now.tv_sec*100 + now.tv_usec/10000;
+  *microsecs = (uint64_t)now.tv_sec*1000000 + now.tv_usec;
 }
 
 #define MAKE_ASCIIZ(start,len) (name_addr=start,name_len=len,	\
@@ -462,11 +462,11 @@ void forth_io(uint8_t opcode, struct engine_state *state)
     break;
   case 0xc: /* CURRENT-TIME */
     {
-      uint64_t centisecs;
-      current_time(&centisecs);
+      uint64_t microsecs;
+      current_time(&microsecs);
       sp-=2;
-      sp[1] = centisecs & 0xffffffff;
-      sp[0] = centisecs >> 32;
+      sp[1] = microsecs & 0xffffffff;
+      sp[0] = microsecs >> 32;
     }
     break;
   case 0x10: /* OPEN-FILE */
