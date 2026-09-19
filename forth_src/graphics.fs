@@ -72,6 +72,23 @@ $C0CF
 2OPCODE GETPOS ( --- x y)
 \G Return current graphics position
 
+$C0D0 ( c-addr x y xsize ysize ---)
+2OPCODE PUT-BITMAP-MONO
+\G Draw a monochrome bitmap (8 pixels per byte) on the screen.
+
+$C0D1 ( c-addr x y xsize ysize ---)
+2OPCODE PUT-BITMAP
+\G Draw a bitmap (1 byte per pixel) on the screen.
+
+$C0D2 ( c-addr x y xsize ysize ---)
+2OPCODE PUT-BITMAP-TRANSP
+\G Draw a bitmap (1 byte per pixel) on the screen *background colour is
+\G transparent).
+
+$C0D3 ( c-addr x y xsize ysize ---)
+2OPCODE GET-BITMAP
+\G Read a bitmap (1 byte per pixel) from the screen.
+
 [THEN]
 
 : SETFG ( n ---0

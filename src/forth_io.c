@@ -450,6 +450,9 @@ void forth_io(uint8_t opcode, struct engine_state *state)
   case 0xa: /* SETALARM */
     setalarm(*sp++);
     break;
+  case 0xb: /* USLEEP */
+    usleep(*sp++);
+    break;
   case 0x10: /* OPEN-FILE */
     MAKE_ASCIIZ(dict_base+sp[2],sp[1]);
     if (sp[0]>=6) {
@@ -736,6 +739,22 @@ void forth_io(uint8_t opcode, struct engine_state *state)
       sp[0]=y;
       sp[1]=x;
     }
+    break;
+  case 0xd0: /* PUT-BITMAP-MONO */
+    if (tbm) tbm_mono_bitmap_put(tbm,dict_base+sp[4],sp[3],sp[2],sp[1],sp[0]);
+    sp+=5;
+    break;
+  case 0xd1: /* PUT-BITMAP */
+    if (tbm) tbm_bitmap_put(tbm,dict_base+sp[4],sp[3],sp[2],sp[1],sp[0], false);
+    sp+=5;
+    break;
+  case 0xd2: /* PUT-BITMAP-TRANSP */
+    if (tbm) tbm_bitmap_put(tbm,dict_base+sp[4],sp[3],sp[2],sp[1],sp[0], true);
+    sp+=5;
+    break;
+  case 0xd3: /* GET-BITMAP */
+    if (tbm) tbm_bitmap_get(tbm,dict_base+sp[4],sp[3],sp[2],sp[1],sp[0]);
+    sp+=5;
     break;
 #endif    
   default:

@@ -427,10 +427,16 @@ VARIABLE TIMER
   1 TIMER +! RTI
 ;
 
+[DEFINED] USLEEP [IF]
+: MS ( n --- )
+\G Delay for n milliseconds.
+  1000 * USLEEP ;
+[ELSE]
 : MS ( n --- )
 \G Delay for n milliseconds.
   ['] TIMER-INT $30 ! 1000 * SETALARM TIMER @
   BEGIN TIMER @ OVER - UNTIL DROP ;
+[THEN]
 
 : SAVE-SYSTEM ( "ccc" --- )
 \G Save the Forth system to a file.

@@ -525,6 +525,10 @@ $C00A
 2OPCODE SETALARM ( n ---)
 \G create an alarm after n microseconds
 
+$C00B
+2OPCODE USLEEP ( n ---)
+\G sleep for n microseconds
+
 
 $C1
 OPCODE SP@      ( --- a-addr)
