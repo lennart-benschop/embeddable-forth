@@ -312,6 +312,7 @@ VARIABLE MONTH-X
 [IF]
 VARIABLE MONTH-X    
 : YEAR-GRAPH ( year --- )
+    SCREEN-SIZE NIP >R \ Find screen height.
     GRAPHICS-MODE PAGE 
     DUP DST-RULE @ EXECUTE \ Set summertime start and end dates.
     365 OVER 3 AND 0= IF 1+ THEN >R 
@@ -341,7 +342,9 @@ VARIABLE MONTH-X
 	10 SETFG-G
 	50 I 550 365 */ + 20 ROT 4 / + PLOTDOT
     LOOP	
-    DROP REDRAW TEXT-MODE
+    DROP REDRAW
+    0 R> 2 - AT-XY \ Put cursor on second last row, prevent scrolling.
+    TEXT-MODE
 ;
 [THEN]
 
